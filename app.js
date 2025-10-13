@@ -1,67 +1,75 @@
 const { useState, useEffect } = React;
 
-function EmojiVoting() {
-  const [emojis, setEmojis] = useState([
-    { name: "😀", votes: 0 },
-    { name: "😢", votes: 0 },
-    { name: "😎", votes: 0 },
-    { name: "😡", votes: 0 }
-  ]);
+function EmojiVotingApp() {
+  const initialVotes = JSON.parse(localStorage.getItem("emojiVotesHooks")) || {
+    "😊": 0,
+    "😎": 0,
+    "🤩": 0,
+    "😂": 0
+  };
+
+  const [votes, setVotes] = useState(initialVotes);
   const [winners, setWinners] = useState([]);
 
-  // Load from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('emojiVotesFunctional');
-    if (saved) setEmojis(JSON.parse(saved));
-  }, []);
+    localStorage.setItem("emojiVotesHooks", JSON.stringify(votes));
+  }, [votes]);
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('emojiVotesFunctional', JSON.stringify(emojis));
-  }, [emojis]);
-
-  const vote = (index) => {
-    const newEmojis = [...emojis];
-    newEmojis[index].votes += 1;
-    setEmojis(newEmojis);
+  const handleVote = (emoji) => {
+    setVotes((prev) => ({ ...prev, [emoji]: prev[emoji] + 1 }));
   };
 
   const showResults = () => {
-    const maxVotes = Math.max(...emojis.map(e => e.votes));
-    const top = emojis.filter(e => e.votes === maxVotes && maxVotes > 0);
+    const maxVotes = Math.max(...Object.values(votes));
+    const top = Object.entries(votes).filter(([_, count]) => count === maxVotes);
     setWinners(top);
   };
 
   const clearResults = () => {
-    const reset = emojis.map(e => ({ ...e, votes: 0 }));
-    setEmojis(reset);
+    const reset = Object.keys(votes).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+    setVotes(reset);
     setWinners([]);
-    localStorage.removeItem('emojiVotesFunctional');
+    localStorage.removeItem("emojiVotesHooks");
   };
 
   return (
-    <div className="container">
-      <h2 className="mb-3">Emoji Voting (Functional Component)</h2>
-      <div className="mb-3">
-        {emojis.map((emoji, index) => (
-          <button key={index} className="btn btn-outline-primary me-2 mb-2" onClick={() => vote(index)}>
-            {emoji.name} {emoji.votes}
-          </button>
+    <div className="container p-4 bg-white rounded shadow" style={{ maxWidth: "600px" }}>
+      <h2 className="mb-4 text-primary">Emoji Voting App (Hooks)</h2>
+      <div className="d-flex justify-content-around mb-4">
+        {Object.entries(votes).map(([emoji, count]) => (
+          <div key={emoji} className="text-center">
+            <button
+              className="btn btn-lg btn-outline-primary mb-2"
+              onClick={() => handleVote(emoji)}
+            >
+              {emoji}
+            </button>
+            <p>{count} votes</p>
+          </div>
         ))}
       </div>
-      <div className="mb-3">
-        <button className="btn btn-success me-2" onClick={showResults}>Show Results</button>
-        <button className="btn btn-danger" onClick={clearResults}>Clear Results</button>
+
+      <div className="d-flex justify-content-center gap-3">
+        <button className="btn btn-success" onClick={showResults}>
+          Show Results
+        </button>
+        <button className="btn btn-danger" onClick={clearResults}>
+          Clear Results
+        </button>
       </div>
-      <div>
-        <h4>Winner(s):</h4>
-        {winners.length === 0 && <p>No votes yet</p>}
-        {winners.map((e, i) => (
-          <p key={i}>{e.name} - {e.votes} votes</p>
-        ))}
-      </div>
+
+      {winners.length > 0 && (
+        <div className="mt-4">
+          <h4>🏆 Winner{winners.length > 1 ? "s" : ""}:</h4>
+          {winners.map(([emoji, count]) => (
+            <p key={emoji} style={{ fontSize: "2rem" }}>
+              {emoji} — {count} votes
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-ReactDOM.render(<EmojiVoting />, document.getElementById('root'));
+ReactDOM.createRoot(document.getElementById("root")).render(<EmojiVotingApp />);
