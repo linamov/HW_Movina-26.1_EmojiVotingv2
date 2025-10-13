@@ -1,5 +1,4 @@
 const { useState, useEffect } = React;
-
 function EmojiVotingApp() {
   const initialVotes = JSON.parse(localStorage.getItem("emojiVotesHooks")) || {
     "😊": 0,
