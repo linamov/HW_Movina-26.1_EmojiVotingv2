@@ -1,29 +1,37 @@
 const { useState, useEffect } = React;
+
 function EmojiVotingApp() {
-  const initialVotes = JSON.parse(localStorage.getItem("emojiVotesHooks")) || {
-    "😊": 0,
-    "😎": 0,
-    "🤩": 0,
-    "😂": 0
-  };
+  // Load saved votes from localStorage or use default values
+  const initialVotes = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("emojiVotesHooks"));
+      return saved || { "😊": 0, "😎": 0, "🤩": 0, "😂": 0 };
+    } catch {
+      return { "😊": 0, "😎": 0, "🤩": 0, "😂": 0 };
+    }
+  })();
 
   const [votes, setVotes] = useState(initialVotes);
   const [winners, setWinners] = useState([]);
 
+  // Save votes to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("emojiVotesHooks", JSON.stringify(votes));
   }, [votes]);
 
+  // Handle a vote for a specific emoji
   const handleVote = (emoji) => {
     setVotes((prev) => ({ ...prev, [emoji]: prev[emoji] + 1 }));
   };
 
+  // Show results (find emoji(s) with the highest votes)
   const showResults = () => {
     const maxVotes = Math.max(...Object.values(votes));
     const top = Object.entries(votes).filter(([_, count]) => count === maxVotes);
     setWinners(top);
   };
 
+  // Clear all votes and results
   const clearResults = () => {
     const reset = Object.keys(votes).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
     setVotes(reset);
@@ -34,6 +42,7 @@ function EmojiVotingApp() {
   return (
     <div className="container p-4 bg-white rounded shadow" style={{ maxWidth: "600px" }}>
       <h2 className="mb-4 text-primary">Emoji Voting App (Hooks)</h2>
+
       <div className="d-flex justify-content-around mb-4">
         {Object.entries(votes).map(([emoji, count]) => (
           <div key={emoji} className="text-center">
@@ -71,4 +80,5 @@ function EmojiVotingApp() {
   );
 }
 
+// Render the app 
 ReactDOM.createRoot(document.getElementById("root")).render(<EmojiVotingApp />);
